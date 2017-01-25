@@ -77,7 +77,6 @@ def tinyMazeSearch(problem):
     return  [s, s, w, s, w, w, s, w]
 
 def depthFirstSearch(problem):
-
     """
     Search the deepest nodes in the search tree first.
 
@@ -150,8 +149,49 @@ def breadthFirstSearch(problem):
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pqueue = util.PriorityQueue()
+    pqueue.push(problem.getStartState(), 0)
+
+    visited = set([])
+
+    pathsDic = {} # dictionary that key as state and value as the path to key state
+    pathsDic[problem.getStartState()] = []
+
+    costDic = {}
+    costDic[problem.getStartState()] = 0
+
+    while True:
+        if pqueue.isEmpty():
+            return [] # if it fails, return empty list
+        else:
+            currentState = pqueue.pop()
+            print pathsDic[currentState]
+            if currentState in visited:
+                print "visited"
+                continue
+
+            else:
+                visited.add(currentState)
+                if problem.isGoalState(currentState): # if we reach the goal, return path
+                    print "goal"
+                    return pathsDic[currentState]
+                else:
+                    triples = problem.getSuccessors(currentState)
+                    for triple in triples:
+                        newcost = costDic[currentState] + triple[2]
+                        print triple[0]
+                        print newcost
+                        if triple[0] in costDic.keys() and costDic[triple[0]] > newcost:
+                            costDic[triple[0]] = newcost
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
+                            pqueue.update(triple[0], newcost)
+
+                        elif not triple[0] in costDic.keys():
+                            costDic[triple[0]] = costDic[currentState] + triple[2]
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
+                            pqueue.update(triple[0], costDic[triple[0]])
+
+
 
 def nullHeuristic(state, problem=None):
     """
