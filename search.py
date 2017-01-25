@@ -42,6 +42,9 @@ class SearchProblem:
         util.raiseNotDefined()
 
     def getSuccessors(self, state):
+        # need to do for dfs
+        # use legal actions
+        # need to findout where agent is
         """
           state: Search state
 
@@ -50,6 +53,7 @@ class SearchProblem:
         state, 'action' is the action required to get there, and 'stepCost' is
         the incremental cost of expanding to that successor.
         """
+
         util.raiseNotDefined()
 
     def getCostOfActions(self, actions):
@@ -73,6 +77,7 @@ def tinyMazeSearch(problem):
     return  [s, s, w, s, w, w, s, w]
 
 def depthFirstSearch(problem):
+
     """
     Search the deepest nodes in the search tree first.
 
@@ -86,38 +91,62 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    possiblePaths = []
-    if problem.isGoalState(problem.getStartState()):
-        return possiblePaths
-    else:
-        stack = util.Stack().push()
-        visited = set([])
-        while True:
-            if stack.isEmpty():
-                return possiblePaths
+
+    stack = util.Stack()
+    stack.push(problem.getStartState())
+
+    visited = set([])
+
+    pathsDic = {} # dictionary that key as state and value as the path to key state
+    pathsDic[problem.getStartState()] = []
+
+    while True:
+        if stack.isEmpty():
+            return [] # if it fails, return empty list
+        else:
+            currentState = stack.pop()
+            if currentState in visited:
+                continue
+
             else:
-
-
-
-
-
-
-
-
-
-
-
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
-
+                visited.add(currentState)
+                if problem.isGoalState(currentState): # if we reach the goal, return path
+                    return pathsDic[currentState]
+                else:
+                    triples = problem.getSuccessors(currentState)
+                    for triple in triples:
+                        stack.push(triple[0])
+                        pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    queue = util.Queue()
+    queue.push(problem.getStartState())
+
+    visited = set([])
+
+    pathsDic = {} # dictionary that key as state and value as the path to key state
+    pathsDic[problem.getStartState()] = []
+
+    while True:
+        if queue.isEmpty():
+            return [] # if it fails, return empty list
+        else:
+            currentState = queue.pop()
+            if currentState in visited:
+                continue
+
+            else:
+                visited.add(currentState)
+                if problem.isGoalState(currentState): # if we reach the goal, return path
+                    return pathsDic[currentState]
+                else:
+                    triples = problem.getSuccessors(currentState)
+                    for triple in triples:
+                        queue.push(triple[0])
+                        if triple[0] not in pathsDic.keys():
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
