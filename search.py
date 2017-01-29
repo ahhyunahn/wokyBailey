@@ -96,64 +96,60 @@ def depthFirstSearch(problem):
 
     visited = set([])
 
-    pathsDic = {} # dictionary that has key as position and value as the path to key position
+    pathsDic = {} # dictionary that has key as state and value as the path to key state
     pathsDic[problem.getStartState()] = []
 
     while True:
         if stack.isEmpty():
             return [] # if it fails, return empty list
         else:
-            currentPosition = stack.pop()
-            if currentPosition in visited:
+            currentState = stack.pop()
+            if currentState in visited:
                 continue
 
             else:
-                visited.add(currentPosition)
-                if problem.isGoalState(currentPosition): # if we reach the goal, return path
-                    return pathsDic[currentPosition]
+                visited.add(currentState)
+                if problem.isGoalState(currentState): # if we reach the goal, return path
+                    return pathsDic[currentState]
                 else:
-                    triples = problem.getSuccessors(currentPosition)
+                    triples = problem.getSuccessors(currentState)
                     for triple in triples:
                         stack.push(triple[0])
-                        pathsDic[triple[0]] = pathsDic[currentPosition] + [triple[1]]
+                        pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    startingPosition = problem.getStartState()["startPosition"]
-    print startingPosition
-
+    # we needed to do this to get the position tuple
+    # startingPosition = problem.getStartState()["startPosition"]
+    startingState = problem.getStartState()
     queue = util.Queue()
-
-    # GOTTA CHANGE ALL THE SEARCHES TO QUEUE IN STATES NOT POSITIONS
-    # AND EDIT IT SO THAT IT MODIFIES ACCORDINGLY
-    queue.push(startingPosition)
+    queue.push(startingState)
 
     visited = set([])
 
-    pathsDic = {} # dictionary that has key as position and value as the path to key position
-    print problem.getStartState()
-    pathsDic[startingPosition] = []
+    pathsDic = {} # dictionary that has key as state and value as the path to key state
+    pathsDic[startingState] = []
 
     while True:
         if queue.isEmpty():
             return [] # if it fails, return empty list
         else:
-            currentPosition = queue.pop()
-            if currentPosition in visited:
+            currentState = queue.pop()
+            if currentState in visited:
                 continue
 
             else:
-                visited.add(currentPosition)
-                if problem.isGoalState(currentPosition): # if we reach the goal, return path
-                    return pathsDic[currentPosition]
+                visited.add(currentState)
+                if problem.isGoalState(currentState): # if we reach the goal, return path
+                    return pathsDic[currentState]
 
                 else:
-                    triples = problem.getSuccessors(currentPosition)
+                    triples = problem.getSuccessors(currentState)
                     for triple in triples:
                         queue.push(triple[0])
                         if triple[0] not in pathsDic.keys():
-                            pathsDic[triple[0]] = pathsDic[currentPosition] + [triple[1]]
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
@@ -162,33 +158,33 @@ def uniformCostSearch(problem):
 
     visited = set([])
 
-    pathsDic = {} # dictionary that has key as position and value as the path to key position
+    pathsDic = {} # dictionary that has key as state and value as the path to key state
     pathsDic[problem.getStartState()] = []
 
-    costDic = {} # dictionary that has key as position and value as minimum cumulated cost
+    costDic = {} # dictionary that has key as state and value as minimum cumulated cost
     costDic[problem.getStartState()] = 0
 
     while True:
         if pqueue.isEmpty():
             return [] # if it fails, return empty list
         else:
-            currentPosition = pqueue.pop()
-            print pathsDic[currentPosition]
-            if currentPosition in visited:
+            currentState = pqueue.pop()
+            print pathsDic[currentState]
+            if currentState in visited:
                 print "visited"
                 continue
 
             else:
-                visited.add(currentPosition)
-                if problem.isGoalState(currentPosition): # if we reach the goal, return path
+                visited.add(currentState)
+                if problem.isGoalState(currentState): # if we reach the goal, return path
                     print "goal"
-                    return pathsDic[currentPosition]
+                    return pathsDic[currentState]
 
                 else:
-                    triples = problem.getSuccessors(currentPosition)
+                    triples = problem.getSuccessors(currentState)
                     # for each triple (successor, action, stepcost) returned from getSuccessors
                     for triple in triples:
-                        newcost = costDic[currentPosition] + triple[2]
+                        newcost = costDic[currentState] + triple[2]
                         print triple[0]
                         print newcost
                         # if cost is already calculated and newcost is more optimal
@@ -196,12 +192,12 @@ def uniformCostSearch(problem):
                         # path
                         if triple[0] in costDic.keys() and costDic[triple[0]] > newcost:
                             costDic[triple[0]] = newcost
-                            pathsDic[triple[0]] = pathsDic[currentPosition] + [triple[1]]
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newcost)
 
                         elif not triple[0] in costDic.keys():
-                            costDic[triple[0]] = costDic[currentPosition] + triple[2]
-                            pathsDic[triple[0]] = pathsDic[currentPosition] + [triple[1]]
+                            costDic[triple[0]] = costDic[currentState] + triple[2]
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], costDic[triple[0]])
 
 
@@ -221,51 +217,53 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     visited = set([])
 
-    pathsDic = {} # dictionary that has key as position and value as the path to key position
+    pathsDic = {} # dictionary that has key as state and value as the path to key state
     pathsDic[problem.getStartState()] = []
 
-    valueDic = {} # dictionary that has key as position and value as cumulative cost + manhattenHeuristic
-    valueDic[problem.getStartState()] = searchAgents.manhattanHeuristic(problem.getStartState(), problem)
+    valueDic = {} # dictionary that has key as state and value as cumulative cost + manhattenHeuristic
+    valueDic[problem.getStartState()] = 0
 
     while True:
         if pqueue.isEmpty():
             return [] # if it fails, return empty list
         else:
-            currentPosition = pqueue.pop()
-            print pathsDic[currentPosition]
-            if currentPosition in visited:
+            currentState = pqueue.pop()
+            print pathsDic[currentState]
+
+            print "heuristic of currentState ", heuristic(currentState, problem), " current state", currentState
+
+            if currentState in visited:
                 print "visited"
                 continue
 
             else:
-                visited.add(currentPosition)
+                visited.add(currentState)
                 # if we reach the goal, return path
-                if problem.isGoalState(currentPosition): 
+                if problem.isGoalState(currentState): 
                     print "goal"
-                    return pathsDic[currentPosition]
+                    return pathsDic[currentState]
 
                 else:
-                    print currentPosition
-                    triples = problem.getSuccessors(currentPosition)
+                    triples = problem.getSuccessors(currentState)
                     # for each triple (successor, action, stepcost) returned from getSuccessors
                     for triple in triples:
-                        newValue = (valueDic[currentPosition] + triple[2]
-                            + searchAgents.manhattanHeuristic(currentPosition, problem))
-                        print triple[0]
-                        print newValue
+                        newValue = valueDic[currentState] + triple[2] + heuristic(triple[0], problem)
+                        newCost = valueDic[currentState] + triple[2]
+                        print "successor state currently considered ", triple[0]
+                        print "newCost ", newValue - heuristic(triple[0], problem)
+                        print "valueDic[currentState ", valueDic[currentState], "cost ", triple[2], "heuristic ",heuristic(triple[0], problem)
                         # if value (cumulative cost + manhatten heuristics) is already calculated 
                         # and newValue is more optimal update the priority queue and path dictionary 
                         # with more optimal path
-                        if triple[0] in valueDic.keys() and valueDic[triple[0]] > newValue:
-                            valueDic[triple[0]] = newValue
-                            pathsDic[triple[0]] = pathsDic[currentPosition] + [triple[1]]
+                        if (triple[0] in valueDic.keys() and valueDic[triple[0]] > newCost):
+                            valueDic[triple[0]] = newCost
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
 
                         elif not triple[0] in valueDic.keys():
-                            valueDic[triple[0]] = (valueDic[currentPosition] + triple[2] + 
-                                searchAgents.manhattanHeuristic(triple[0], problem))
-                            pathsDic[triple[0]] = pathsDic[currentPosition] + [triple[1]]
-                            pqueue.update(triple[0], valueDic[triple[0]])
+                            valueDic[triple[0]] = newCost
+                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
+                            pqueue.update(triple[0], newCost)
 
 
 # Abbreviations
