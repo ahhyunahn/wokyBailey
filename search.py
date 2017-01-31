@@ -228,7 +228,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             return [] # if it fails, return empty list
         else:
             currentState = pqueue.pop()
-            print pathsDic[currentState]
+            #print pathsDic[currentState]
 
             print "heuristic of currentState ", heuristic(currentState, problem), " current state", currentState
 
@@ -251,7 +251,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                         newCost = valueDic[currentState] + triple[2]
                         print "successor state currently considered ", triple[0]
                         print "newCost ", newValue - heuristic(triple[0], problem)
-                        print "valueDic[currentState ", valueDic[currentState], "cost ", triple[2], "heuristic ",heuristic(triple[0], problem)
+                        print "valueDic[currentState]:", currentState, "value: ", valueDic[currentState], "cost: ", triple[2], "heuristic: ",heuristic(triple[0], problem)
                         # if value (cumulative cost + manhatten heuristics) is already calculated 
                         # and newValue is more optimal update the priority queue and path dictionary 
                         # with more optimal path
@@ -260,10 +260,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
 
-                        elif not triple[0] in valueDic.keys():
+                        elif (triple[0] not in valueDic.keys()):
                             valueDic[triple[0]] = newCost
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
-                            pqueue.update(triple[0], newCost)
+                            pqueue.update(triple[0], newValue)
 
 
 # Abbreviations
