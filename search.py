@@ -260,10 +260,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
 
-                        elif not triple[0] in valueDic.keys():
+                        elif (triple[0] not in valueDic.keys()):
                             valueDic[triple[0]] = newCost
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
-                            pqueue.update(triple[0], newCost)
+                            pqueue.update(triple[0], newValue)
 
 
 # Abbreviations
