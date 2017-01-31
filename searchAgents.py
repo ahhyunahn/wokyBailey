@@ -288,23 +288,28 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
 
+    def removeCorners(self, positionTuple, tuples):
+        tuplesList = []
+        for i in range(len(tuples)):
+            if positionTuple != tuples[i]:
+                tuplesList += [tuples[i]]
+        return tuple(tuplesList)
+
+
     def getStartState(self):
         """
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
         # use list as datastructure for state
-        # state = [startPosition, cornersToVisit, currentPosition]
+        # state = (startPosition, currentPosition, cornersToVisit)
         # startPosition is a tuple of location (x, y)
         # cornersToVisit is a set of each forners 
-        state = [0, 0, 0] 
-        state[0] = self.startingPosition
-        state[1] = self.corners
-        state[2] = self.startingPosition
+        state = (self.startingPosition, self.startingPosition, self.corners)
 
         # check if the starting position is corner
-        if state[0] in state[1]:
-            state[1].remove(state[0])
+        if state[0] in state[2]:
+            state = (self.startPosition, self.startingPosition, removeCorners(state[0], self.corners))
 
         return state
 
@@ -312,7 +317,7 @@ class CornersProblem(search.SearchProblem):
         """
         Returns whether this search state is a goal state of the problem.
         """
-        return len(state[1]) == 0
+        return len(state[2]) == 0
 
     def getSuccessors(self, state):
         """
@@ -326,7 +331,8 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
-        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+        actions = [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]
+        for action in actions:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
             #   x,y = currentPosition
@@ -334,7 +340,7 @@ class CornersProblem(search.SearchProblem):
             #   nextx, nexty = int(x + dx), int(y + dy)
             #   hitsWall = self.walls[nextx][nexty]
 
-            currentPosition = state[2]
+            currentPosition = state[1]
 
             x,y = currentPosition
             dx, dy = Actions.directionToVector(action)
@@ -343,14 +349,16 @@ class CornersProblem(search.SearchProblem):
 
             if not hitsWall:
                 successorState = state
-                successorState[2] = (nextx, nexty)
+                successorStateList = list(successorState)
+                successorStateList[1] = (nextx, nexty)
+                successorState = tuple(successorStateList)
 
                 # check if successorState's position is a corner, update the 
                 # 1 (visited corners log)
-                if successorState[2] in successorState[1]:
-                    successorState[1].remove(successorState[2])
 
-                successors += [(successorState, action, self.getCostOfActions(action))]
+                if successorState[1] in successorState[2]:
+                    successorState = (successorState[0], successorState[1], self.removeCorners(successorState[1], successorState[2]))
+                successors += [(successorState, action, self.getCostOfActions([action]))]
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
