@@ -464,7 +464,7 @@ class FoodSearchProblem:
         return self.start
 
     def isGoalState(self, state):
-        return state[1].count() == 0
+        return self.heuristicInfo['foodCount'] == 0
 
     def getSuccessors(self, state):
         "Returns successor states, the actions they require, and a cost of 1."
@@ -502,6 +502,12 @@ class AStarFoodSearchAgent(SearchAgent):
 
 def foodHeuristic(state, problem):
     """
+    self.start = (startingGameState.getPacmanPosition(), startingGameState.getFood())
+        self.walls = startingGameState.getWalls()
+        self.startingGameState = startingGameState
+        self._expanded = 0 # DO NOT CHANGE
+        self.heuristicInfo = {} # A dictionary for the heuristic to store information
+
     Your heuristic for the FoodSearchProblem goes here.
 
     This heuristic must be consistent to ensure correctness.  First, try to come
@@ -528,8 +534,51 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
+
     position, foodGrid = state
-    
+    x, y = position    # Only execute at the start of the program
+    # print "problem.startingGameState "
+    # print problem.startingGameState
+    # print problem.startingGameState.getPacmanPosition()
+    # print "position ", position
+    problem.heuristicInfo['foodList'] = foodGrid.asList()
+    problem.heuristicInfo['foodCount'] = foodGrid.count()
+
+    return problem.heuristicInfo['foodCount']
+
+""" I really couldn't figure this out.
+    if problem.startingGameState.getPacmanPosition() == position:
+        print "--------------------"
+        problem.heuristicInfo['wallCount'] = problem.walls.count()
+        problem.heuristicInfo['foodCount'] = foodGrid.count()
+        problem.heuristicInfo['foodList'] = foodGrid.asList()
+
+    print "this is zero? ", problem.heuristicInfo['foodCount']
+    # GOALS
+    if problem.heuristicInfo['foodCount'] == 0: 
+        print "??"
+        return 0
+    # When we are at the food place, we decrement the total number of food and remove
+    # the position from the foodList, which stores all the coordinates for places that
+    # has food
+
+    if position in problem.heuristicInfo['foodList']:
+        problem.heuristicInfo['foodCount'] -= 1
+        tempList = problem.heuristicInfo['foodList']
+        tempList.remove(position)
+        problem.heuristicInfo['foodList'] = tempList
+        print "food Count ", problem.heuristicInfo['foodCount']
+        print "wall Count ", problem.heuristicInfo['wallCount']
+        if problem.heuristicInfo['foodCount'] == 0:
+            return 0
+
+
+    # Since we don't have a tie breaker if ther are multiple moves that makes the 
+    # number of food to be equal (e.g. if there are food surrounding pecman/ there
+    # is no food directly around it), we add the minimum manhatten distance for all
+    # the food.
+    return problem.heuristicInfo['foodCount']
+    """
 
 
 
@@ -555,16 +604,11 @@ class ClosestDotSearchAgent(SearchAgent):
         Returns a path (a list of actions) to the closest dot, starting from
         gameState.
         """
-        # WE NEED TO SET THE THRESHOLD FOR HEURISTIC VALUE (IT SHOULD BE HIGHER THAN)
-        # CERTIAN AMOUNT AND NOT ON THE COST TO REDUCE THE NUMBER OF NODES GOING INTO
-        # THE FRINGE THUS MAKE THIS ALGORITHM FASTER
-
         # Here are some useful elements of the startState
         startPosition = gameState.getPacmanPosition()
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-        print startPosition
         if problem.isGoalState(startPosition):
             return []
         else:
