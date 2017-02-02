@@ -400,93 +400,43 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    print "idk what is wrong with this"
-
     cornersToVisit = list(state[2])
     currentPosition = state[1]
 
     if problem.isGoalState(state):
-        print "----"
-        print "is goal"
-        print "----"
         return 0
     else:
-        print "------------------&&&-------------------"
-        print cornersToVisit
-
         return idealPath(currentPosition, cornersToVisit, problem)
-
-def cornerPairs(cornersToVisit):
-    for i in range(length(cornersToVisit)) - 1:
-        yield (cornersToVisit[i], cornersToVisit[i + 1])
-    yield (cornersToVisit[length(cornersToVisit)], cornersToVisit[0])
 
 def findMinCorner(currentPosition, cornersToVisit, problem):
     minCorner = (0,0)
     minVal = 999999
+    # for each corners to visit, calculate manhatten distance to it and
+    # save to minCorner and minVal if it is the closest one from currentPosition
     for corner in cornersToVisit:
         currentVal = calculateManhattenAtoB(currentPosition, corner)
-
         if currentVal < minVal:
             minVal = currentVal
             minCorner = corner
-    print minCorner, minVal
     return (minCorner, minVal)
 
 def idealPath(currentPosition, cornersToVisit, problem):
-        if len(cornersToVisit) == 0:
-            return 0
-        else:
-            closestCorner, closestCornerVal = findMinCorner(currentPosition, cornersToVisit, problem)
-            newcornersToVisit = cornersToVisit
-            newcornersToVisit.remove(closestCorner)
-            return closestCornerVal + idealPath(closestCorner, newcornersToVisit, problem)
+    """ this is a recursive adaptation of findMinCorner, thus letting us find
+        the closest corner from the current position, then the closest corner to the 
+        previously chosen corner, and so on. This returns the manhatten heuristics 
+        estimate on ideal "greed-ly" chosen path.
+    """
+    if len(cornersToVisit) == 0:
+        return 0
+    else:
+        closestCorner, closestCornerVal = findMinCorner(currentPosition, cornersToVisit, problem)
+        newcornersToVisit = cornersToVisit
+        newcornersToVisit.remove(closestCorner)
+        return closestCornerVal + idealPath(closestCorner, newcornersToVisit, problem)
 
 def calculateManhattenAtoB(posA, posB):
     # manhatten distance from position A to position B
     return abs(posA[0] - posB[0]) + abs(posA[1] - posB[1])
-    # return ( (posA[0] - posB[0]) ** 2 + (posA[1] - posB[1]) ** 2 ) ** 0.5
-
-
-# def getMaxWallHeight(wall, cornerA, cornerB):
-#     xA, yA = cornerA
-#     xB, yB = cornerB
-
-#     if xA != xB and yA != yB:
-#         return 0 # we cannot calculate this penalty with diagonal movement
-#     elif xA == xB:
-#         dx, dy = 0, 1
-#         startX, startY = xA, min(yA, yB)
-#         endX, endY = xA, max(yA, yB)
-#     else:
-#         dx, dy = 1, 0
-#         startX, startY = min(xA, xB), yA
-#         endX, endY = max(xA, xB), yA
-
-#     byFarMax = 0
-#     currentHeight = 0
-#     while startX != endX or startY != endY:
-#         startX += dx
-#         startY += dy
-#         tempX = startX
-#         tempY = startY
-#         while walls.data[tempX][tempY]:
-#             currentHeigth += 1
-#             tempX += dy
-#             tempY += dx
-
-
-
-
-
-
-def getPermutation(corners):
-    if len(corners) <=1:
-        yield corners
-    else:
-        for cornerPerm in getPermutation(corners[1:]):
-            for i in range(len(corners)):
-                yield cornerPerm[:i] + corners[0:1] + cornerPerm[i:]
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -579,8 +529,9 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    
+
+
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -613,14 +564,11 @@ class ClosestDotSearchAgent(SearchAgent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-
-        actions  = self.searchFunction(problem) # Find a path
-    # self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
-
-    #     return self.searchFunction(problem)
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        print startPosition
+        if problem.isGoalState(startPosition):
+            return []
+        else:
+            return search.bfs(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -653,12 +601,10 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-
-        for y in range(self.food.width):
-            for x in range(self.food.height):
-                if self.food.data[x][y] == True:
-                    return False
-        return True
+        # get current x, y coordinate
+        x, y = state
+        # check if we are at the location where food is!
+        return self.food.data[x][y]
 
 def mazeDistance(point1, point2, gameState):
     """
