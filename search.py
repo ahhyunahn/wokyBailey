@@ -214,54 +214,56 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node of least total cost first."""
     pqueue = util.PriorityQueue()
     pqueue.push(problem.getStartState(), 0)
+    print [problem.getStartState()]
 
     visited = set([])
 
     pathsDic = {} # dictionary that has key as state and value as the path to key state
     pathsDic[problem.getStartState()] = []
 
-    valueDic = {} # dictionary that has key as state and value as cumulative cost + manhattenHeuristic
-    valueDic[problem.getStartState()] = 0
+    costDic = {} # dictionary that has key as state and value as its cumulative cost
+    costDic[problem.getStartState()] = 0
 
     while True:
         if pqueue.isEmpty():
             return [] # if it fails, return empty list
         else:
             currentState = pqueue.pop()
-            print pathsDic[currentState]
-
-            print "heuristic of currentState ", heuristic(currentState, problem), " current state", currentState
+            # whenever we reach a new corner, we need to update the heuristic
+            # for all the states that already got in to the pqueue
+            tempList = []
+            while not pqueue.isEmpty():
+                tempList.append(pqueue.pop())
+            for item in tempList:
+                pqueue.push(item, costDic[item] + heuristic(item, problem))
 
             if currentState in visited:
-                print "visited"
                 continue
 
             else:
                 visited.add(currentState)
                 # if we reach the goal, return path
                 if problem.isGoalState(currentState): 
-                    print "goal"
+                    # print "goal"
                     return pathsDic[currentState]
 
                 else:
                     triples = problem.getSuccessors(currentState)
                     # for each triple (successor, action, stepcost) returned from getSuccessors
                     for triple in triples:
-                        newValue = valueDic[currentState] + triple[2] + heuristic(triple[0], problem)
-                        newCost = valueDic[currentState] + triple[2]
-                        print "successor state currently considered ", triple[0]
-                        print "newCost ", newValue - heuristic(triple[0], problem)
-                        print "valueDic[currentState ", valueDic[currentState], "cost ", triple[2], "heuristic ",heuristic(triple[0], problem)
-                        # if value (cumulative cost + manhatten heuristics) is already calculated 
+                        newValue = costDic[currentState] + triple[2] + heuristic(triple[0], problem)
+                        newCost = costDic[currentState] + triple[2]
+                        # print "successor state currently considered ", triple[0]
+                        # print "newCost ", newValue - heuristic(triple[0], problem)                        
                         # and newValue is more optimal update the priority queue and path dictionary 
                         # with more optimal path
-                        if (triple[0] in valueDic.keys() and valueDic[triple[0]] > newCost):
-                            valueDic[triple[0]] = newCost
+                        if (triple[0] in costDic.keys() and costDic[triple[0]] > newCost):
+                            costDic[triple[0]] = newCost
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
 
-                        elif (triple[0] not in valueDic.keys()):
-                            valueDic[triple[0]] = newCost
+                        elif (triple[0] not in costDic.keys()):
+                            costDic[triple[0]] = newCost
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
 
