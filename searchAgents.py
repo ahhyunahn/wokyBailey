@@ -464,7 +464,9 @@ class FoodSearchProblem:
         return self.start
 
     def isGoalState(self, state):
-        return self.heuristicInfo['foodCount'] == 0
+        if self.heuristicInfo:
+            return self.heuristicInfo['foodCount'] == 0
+        return state[1].count() == 0
 
     def getSuccessors(self, state):
         "Returns successor states, the actions they require, and a cost of 1."
@@ -544,7 +546,10 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['foodList'] = foodGrid.asList()
     problem.heuristicInfo['foodCount'] = foodGrid.count()
 
-    return problem.heuristicInfo['foodCount']
+    if problem.heuristicInfo['foodCount'] == 0:
+        return 0
+
+    return max([calculateManhattenAtoB(position, food) for food in problem.heuristicInfo['foodList']])
 
 """ I really couldn't figure this out.
     if problem.startingGameState.getPacmanPosition() == position:
