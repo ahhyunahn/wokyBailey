@@ -322,6 +322,9 @@ class CornersProblem(search.SearchProblem):
         """
         Returns whether this search state is a goal state of the problem.
         """
+        if len(state[2]) == 0:
+            print "*****GOAL******"
+            print state
         return len(state[2]) == 0
 
     def getSuccessors(self, state):
@@ -397,19 +400,52 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
+    print "idk what is wrong with this"
+
     cornersToVisit = list(state[2])
     currentPosition = state[1]
 
     if problem.isGoalState(state):
+        print "----"
         print "is goal"
+        print "----"
         return 0
     else:
-        print "---------------------------------------"
-        return sum([calculateManhattenAtoB(currentPosition, corner) for corner in cornersToVisit])
+        print "------------------&&&-------------------"
+        print cornersToVisit
+
+        return idealPath(currentPosition, cornersToVisit, problem)
+
+def cornerPairs(cornersToVisit):
+    for i in range(length(cornersToVisit)) - 1:
+        yield (cornersToVisit[i], cornersToVisit[i + 1])
+    yield (cornersToVisit[length(cornersToVisit)], cornersToVisit[0])
+
+def findMinCorner(currentPosition, cornersToVisit, problem):
+    minCorner = (0,0)
+    minVal = 999999
+    for corner in cornersToVisit:
+        currentVal = calculateManhattenAtoB(currentPosition, corner)
+
+        if currentVal < minVal:
+            minVal = currentVal
+            minCorner = corner
+    print minCorner, minVal
+    return (minCorner, minVal)
+
+def idealPath(currentPosition, cornersToVisit, problem):
+        if len(cornersToVisit) == 0:
+            return 0
+        else:
+            closestCorner, closestCornerVal = findMinCorner(currentPosition, cornersToVisit, problem)
+            newcornersToVisit = cornersToVisit
+            newcornersToVisit.remove(closestCorner)
+            return closestCornerVal + idealPath(closestCorner, newcornersToVisit, problem)
 
 def calculateManhattenAtoB(posA, posB):
     # manhatten distance from position A to position B
     return abs(posA[0] - posB[0]) + abs(posA[1] - posB[1])
+    # return ( (posA[0] - posB[0]) ** 2 + (posA[1] - posB[1]) ** 2 ) ** 0.5
 
 
 # def getMaxWallHeight(wall, cornerA, cornerB):
