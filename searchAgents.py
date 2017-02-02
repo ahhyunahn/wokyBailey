@@ -287,13 +287,18 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         # Please add any code here which you would like to use
         # in initializing the problem
+        self.startingGameState = startingGameState
 
     def removeCorners(self, positionTuple, tuples):
-        tuplesList = []
-        for i in range(len(tuples)):
-            if positionTuple != tuples[i]:
-                tuplesList += [tuples[i]]
-        return tuple(tuplesList)
+        print "original corners ", tuples
+        listTuple = list(tuples)
+        if positionTuple in listTuple:
+            print "this is removing corner ", positionTuple
+            print "original LIST TUPLE ", listTuple
+            listTuple.remove(positionTuple)
+            print "resulted corners ", listTuple
+
+        return tuple(listTuple)
 
 
     def getStartState(self):
@@ -351,14 +356,13 @@ class CornersProblem(search.SearchProblem):
                 successorState = state
                 successorStateList = list(successorState)
                 successorStateList[1] = (nextx, nexty)
-                successorState = tuple(successorStateList)
+                successorStateList[2] = list(successorStateList[2])
 
-                # check if successorState's position is a corner, update the 
-                # 1 (visited corners log)
+                if (nextx, nexty) in successorStateList[2]:
+                    successorStateList[2].remove((nextx, nexty))
 
-                if successorState[1] in successorState[2]:
-                    successorState = (successorState[0], successorState[1], self.removeCorners(successorState[1], successorState[2]))
-                successors += [(successorState, action, self.getCostOfActions([action]))]
+                successorStateList[2] = tuple(successorStateList[2])
+                successors += [(tuple(successorStateList), action, self.getCostOfActions([action]))]
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -393,8 +397,60 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    cornersToVisit = list(state[2])
+    currentPosition = state[1]
+
+    if problem.isGoalState(state):
+        print "is goal"
+        return 0
+    else:
+        print "---------------------------------------"
+        return sum([calculateManhattenAtoB(currentPosition, corner) for corner in cornersToVisit])
+
+def calculateManhattenAtoB(posA, posB):
+    # manhatten distance from position A to position B
+    return abs(posA[0] - posB[0]) + abs(posA[1] - posB[1])
+
+
+# def getMaxWallHeight(wall, cornerA, cornerB):
+#     xA, yA = cornerA
+#     xB, yB = cornerB
+
+#     if xA != xB and yA != yB:
+#         return 0 # we cannot calculate this penalty with diagonal movement
+#     elif xA == xB:
+#         dx, dy = 0, 1
+#         startX, startY = xA, min(yA, yB)
+#         endX, endY = xA, max(yA, yB)
+#     else:
+#         dx, dy = 1, 0
+#         startX, startY = min(xA, xB), yA
+#         endX, endY = max(xA, xB), yA
+
+#     byFarMax = 0
+#     currentHeight = 0
+#     while startX != endX or startY != endY:
+#         startX += dx
+#         startY += dy
+#         tempX = startX
+#         tempY = startY
+#         while walls.data[tempX][tempY]:
+#             currentHeigth += 1
+#             tempX += dy
+#             tempY += dx
+
+
+
+
+
+
+def getPermutation(corners):
+    if len(corners) <=1:
+        yield corners
+    else:
+        for cornerPerm in getPermutation(corners[1:]):
+            for i in range(len(corners)):
+                yield cornerPerm[:i] + corners[0:1] + cornerPerm[i:]
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -522,6 +578,11 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
+        actions  = self.searchFunction(problem) # Find a path
+    # self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
+
+    #     return self.searchFunction(problem)
+
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
@@ -556,10 +617,12 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        for y in range(self.food.width):
+            for x in range(self.food.height):
+                if self.food.data[x][y] == True:
+                    return False
+        return True
 
 def mazeDistance(point1, point2, gameState):
     """
