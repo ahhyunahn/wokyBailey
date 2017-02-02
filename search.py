@@ -214,9 +214,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node of least total cost first."""
     pqueue = util.PriorityQueue()
     pqueue.push(problem.getStartState(), 0)
-    print [problem.getStartState()]
 
-    visited = set([])
+    visited = set([]) # save all states that were queued then popped from the queue
 
     pathsDic = {} # dictionary that has key as state and value as the path to key state
     pathsDic[problem.getStartState()] = []
@@ -229,6 +228,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             return [] # if it fails, return empty list
         else:
             currentState = pqueue.pop()
+
             # whenever we reach a new corner, we need to update the heuristic
             # for all the states that already got in to the pqueue
             tempList = []
@@ -244,7 +244,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                 visited.add(currentState)
                 # if we reach the goal, return path
                 if problem.isGoalState(currentState): 
-                    # print "goal"
                     return pathsDic[currentState]
 
                 else:
@@ -253,16 +252,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                     for triple in triples:
                         newValue = costDic[currentState] + triple[2] + heuristic(triple[0], problem)
                         newCost = costDic[currentState] + triple[2]
-                        # print "successor state currently considered ", triple[0]
-                        # print "newCost ", newValue - heuristic(triple[0], problem)                        
-                        # and newValue is more optimal update the priority queue and path dictionary 
+                        # If the state is already in queue and we got a more optimal way                        
+                        # to reach the same state, update the priority queue and path dictionary 
                         # with more optimal path
-                        if (triple[0] in costDic.keys() and costDic[triple[0]] > newCost):
-                            costDic[triple[0]] = newCost
-                            pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
-                            pqueue.update(triple[0], newValue)
-
-                        elif (triple[0] not in costDic.keys()):
+                        if not (triple[0] in costDic.keys() and costDic[triple[0]] <= newCost):
                             costDic[triple[0]] = newCost
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
