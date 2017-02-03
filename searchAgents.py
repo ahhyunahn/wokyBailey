@@ -32,11 +32,16 @@ The parts you fill in start about 3/4 of the way down.  Follow the project
 description for details.
 
 Good luck and happy searching!
+
+Finished editting by Ahhyun Ahn and Wonkyoung Park
+
 """
 
 from game import Directions
 from game import Agent
 from game import Actions
+from heapq import *
+from collections import *
 import util
 import time
 import search
@@ -323,9 +328,9 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         if len(state[2]) == 0:
-            print "*****GOAL******"
-            print state
-        return len(state[2]) == 0
+            return True
+        else:
+            return False
 
     def getSuccessors(self, state):
         """
@@ -341,12 +346,6 @@ class CornersProblem(search.SearchProblem):
         successors = []
         actions = [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]
         for action in actions:
-            # Add a successor state to the successor list if the action is legal
-            # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
 
             currentPosition = state[1]
 
@@ -400,43 +399,22 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    cornersToVisit = list(state[2])
-    currentPosition = state[1]
+    completeNodeList = [state[1]] + list(state[2])
+    completeEdges = foodConnections(completeNodeList, problem.startingGameState)
+    mst, mstLength = minSpanTree(completeNodeList, completeEdges)
 
-    if problem.isGoalState(state):
+    if len(completeNodeList) == 1:
         return 0
-    else:
-        return idealPath(currentPosition, cornersToVisit, problem)
 
-def findMinCorner(currentPosition, cornersToVisit, problem):
-    minCorner = (0,0)
-    minVal = 999999
-    # for each corners to visit, calculate manhatten distance to it and
-    # save to minCorner and minVal if it is the closest one from currentPosition
-    for corner in cornersToVisit:
-        currentVal = calculateManhattenAtoB(currentPosition, corner)
-        if currentVal < minVal:
-            minVal = currentVal
-            minCorner = corner
-    return (minCorner, minVal)
-
-def idealPath(currentPosition, cornersToVisit, problem):
-    """ this is a recursive adaptation of findMinCorner, thus letting us find
-        the closest corner from the current position, then the closest corner to the 
-        previously chosen corner, and so on. This returns the manhatten heuristics 
-        estimate on ideal "greed-ly" chosen path.
-    """
-    if len(cornersToVisit) == 0:
-        return 0
-    else:
-        closestCorner, closestCornerVal = findMinCorner(currentPosition, cornersToVisit, problem)
-        newcornersToVisit = cornersToVisit
-        newcornersToVisit.remove(closestCorner)
-        return closestCornerVal + idealPath(closestCorner, newcornersToVisit, problem)
+    return mstLength
 
 def calculateManhattenAtoB(posA, posB):
     # manhatten distance from position A to position B
     return abs(posA[0] - posB[0]) + abs(posA[1] - posB[1])
+
+def calculateEuclideanAtoB(posA, posB):
+    # manhatten distance from position A to position B
+    return ( (posA[0] - posB[0]) ** 2 + (posA[1] - posB[1]) ** 2 ) ** 0.5
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -502,6 +480,41 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
 
+def minSpanTree(nodes, edges):
+    # uses prim's algorithm - got a lot of guidence from this: https://programmingpraxis.com/2010/04/09/minimum-spanning-tree-prims-algorithm/
+    # to calculate the minimum distance to go to all the nodes
+    conn = defaultdict(list)
+    mstLength = 0
+
+    for node1, node2 in edges.keys():
+        conn[ node1 ].append( (edges[(node1, node2)], node1, node2) )
+ 
+    mst = []
+    used = set([nodes[0]])
+    usable_edges = conn[ nodes[0] ][:]
+    heapify( usable_edges )
+ 
+    while usable_edges:
+        distance, node1, node2 = heappop( usable_edges )
+        if node2 not in used:
+            used.add( node2 )
+            mst.append( ( node1, node2, distance ) )
+            mstLength += distance
+ 
+            for edge in conn[ node2 ]:
+                if edge[2] not in used:
+                    heappush( usable_edges, edge )
+    return mst, mstLength
+
+def foodConnections(foodList, gameState):
+    # generates a set of connection between foods
+    edgeDic = {} # uses coordinate of two verticies as key, and distance as value
+    for firstFood in foodList:
+        for secondFood in foodList:
+            if firstFood != secondFood:
+                edgeDic[(firstFood, secondFood)] = calculateEuclideanAtoB(firstFood, secondFood)
+    return edgeDic
+
 def foodHeuristic(state, problem):
     """
     self.start = (startingGameState.getPacmanPosition(), startingGameState.getFood())
@@ -536,54 +549,18 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
+    # For this problem, I am going to use Prim's algorithm to get the minimum spanning tree - which 
+    # will indicate the shortest distance that the packmen needs to travel from the current 
+    # node to every other nodes (foods)
 
     position, foodGrid = state
     x, y = position    # Only execute at the start of the program
-    # print "problem.startingGameState "
-    # print problem.startingGameState
-    # print problem.startingGameState.getPacmanPosition()
-    # print "position ", position
-    problem.heuristicInfo['foodList'] = foodGrid.asList()
-    problem.heuristicInfo['foodCount'] = foodGrid.count()
 
-    if problem.heuristicInfo['foodCount'] == 0:
-        return 0
+    completeNodeList = [position] + foodGrid.asList()
+    completeEdges = foodConnections(completeNodeList, problem.startingGameState)
+    mst, mstLength = minSpanTree(completeNodeList, completeEdges)
 
-    return max([calculateManhattenAtoB(position, food) for food in problem.heuristicInfo['foodList']])
-
-""" I really couldn't figure this out.
-    if problem.startingGameState.getPacmanPosition() == position:
-        print "--------------------"
-        problem.heuristicInfo['wallCount'] = problem.walls.count()
-        problem.heuristicInfo['foodCount'] = foodGrid.count()
-        problem.heuristicInfo['foodList'] = foodGrid.asList()
-
-    print "this is zero? ", problem.heuristicInfo['foodCount']
-    # GOALS
-    if problem.heuristicInfo['foodCount'] == 0: 
-        print "??"
-        return 0
-    # When we are at the food place, we decrement the total number of food and remove
-    # the position from the foodList, which stores all the coordinates for places that
-    # has food
-
-    if position in problem.heuristicInfo['foodList']:
-        problem.heuristicInfo['foodCount'] -= 1
-        tempList = problem.heuristicInfo['foodList']
-        tempList.remove(position)
-        problem.heuristicInfo['foodList'] = tempList
-        print "food Count ", problem.heuristicInfo['foodCount']
-        print "wall Count ", problem.heuristicInfo['wallCount']
-        if problem.heuristicInfo['foodCount'] == 0:
-            return 0
-
-
-    # Since we don't have a tie breaker if ther are multiple moves that makes the 
-    # number of food to be equal (e.g. if there are food surrounding pecman/ there
-    # is no food directly around it), we add the minimum manhatten distance for all
-    # the food.
-    return problem.heuristicInfo['foodCount']
-    """
+    return mstLength
 
 
 

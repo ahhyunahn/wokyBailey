@@ -85,12 +85,8 @@ def depthFirstSearch(problem):
 
     To get started, you might want to try some of these simple commands to
     understand the search problem that is being passed in:
-
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-
+    # for this problem we used stack(Last in first out) to implement depth first search.
     stack = util.Stack()
     stack.push(problem.getStartState())
 
@@ -120,8 +116,8 @@ def depthFirstSearch(problem):
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    # we needed to do this to get the position tuple
-    # startingPosition = problem.getStartState()["startPosition"]
+    # for this problem we used queue (First in First out) to travel and search for 
+    # each level (and gradually increase the levels to explore)
     startingState = problem.getStartState()
     queue = util.Queue()
     queue.push(startingState)
@@ -169,15 +165,12 @@ def uniformCostSearch(problem):
             return [] # if it fails, return empty list
         else:
             currentState = pqueue.pop()
-            print pathsDic[currentState]
             if currentState in visited:
-                print "visited"
                 continue
 
             else:
                 visited.add(currentState)
                 if problem.isGoalState(currentState): # if we reach the goal, return path
-                    print "goal"
                     return pathsDic[currentState]
 
                 else:
@@ -185,8 +178,6 @@ def uniformCostSearch(problem):
                     # for each triple (successor, action, stepcost) returned from getSuccessors
                     for triple in triples:
                         newcost = costDic[currentState] + triple[2]
-                        print triple[0]
-                        print newcost
                         # if cost is already calculated and newcost is more optimal
                         # update the priority queue and path dictionary with more optimal
                         # path
@@ -213,7 +204,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     """Search the node of least total cost first."""
     pqueue = util.PriorityQueue()
-    pqueue.push(problem.getStartState(), 0)
+    startState = problem.getStartState()
+    pqueue.push(startState, heuristic(startState, problem))
 
     visited = set([]) # save all states that were queued then popped from the queue
 
@@ -237,14 +229,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             for item in tempList:
                 pqueue.push(item, costDic[item] + heuristic(item, problem))
 
-            if currentState in visited:
-                continue
-
-            else:
-                visited.add(currentState)
+            if currentState not in visited:
                 # if we reach the goal, return path
-                if problem.isGoalState(currentState): 
-                    return pathsDic[currentState]
+                if problem.isGoalState(currentState) == True: 
+                   return pathsDic[currentState]
 
                 else:
                     triples = problem.getSuccessors(currentState)
@@ -259,6 +247,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
                             costDic[triple[0]] = newCost
                             pathsDic[triple[0]] = pathsDic[currentState] + [triple[1]]
                             pqueue.update(triple[0], newValue)
+
 
 
 # Abbreviations
