@@ -65,7 +65,7 @@ class ReflexAgent(Agent):
 
         while True:
             if queue.isEmpty():
-                return [] # if it fails, return empty list
+                return (0,0), []  # if it fails, return empty list
             else:
                 currentPos = queue.pop()
                 if currentPos in visited:
@@ -131,27 +131,36 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         newGhostPoses = [ghostState.getPosition() for ghostState in newGhostStates]
 
-        closestFoodPos, closestFoodPath = self.bfs(newPos, self.gridToList(newFood), currentGameState)
+        closestFoodPos, closestFoodPath = self.bfs(newPos, currentGameState.getCapsules(), currentGameState)
         closestFoodDistance = manhattanDistance(newPos, closestFoodPos)
 
-        numberOfFood = len(self.gridToList(newFood))
+        numberOfFood = len(currentGameState.getCapsules())
         if numberOfFood == 0:
           return 42
+
+        stopPoint = 0
+        if action == Directions.STOP:
+          stopPoint = 1
 
         if sum(newScaredTimes) > 1:
           print "cloestFoodDistance: ", closestFoodDistance
           print "numberOfFood: ", numberOfFood
-          return (7/closestFoodDistance) + (5/numberOfFood)
+          return (2/(closestFoodDistance+1)) + (5/numberOfFood) - stopPoint
         elif sum(newScaredTimes) == 1:
-          return (1/closestFoodDistance) + (2/numberOfFood)
-
+          return (1/(closestFoodDistance+1)) + (2/numberOfFood) - stopPoint
         closestGhostPos, closestGhostPath = self.bfs(newPos, newGhostPoses, currentGameState)
         closestGhostDistance = manhattanDistance(newPos, closestGhostPos)
 
         if closestGhostPos == newPos:
           return 0
 
-        return (5.5/closestFoodDistance) - (10/closestGhostDistance^3) + (2/numberOfFood)
+        ghostPoint = 0
+        if closestFoodDistance == 1:
+          ghostPoint = 3
+
+        # return (1/closestFoodDistance) - (2/closestGhostDistance^2) + (1/numberOfFood) - stopPoint - ghostPoint
+
+        return (1/closestFoodDistance) - (2/closestGhostDistance^2) + (1/numberOfFood) - stopPoint - ghostPoint
 
 def scoreEvaluationFunction(currentGameState):
     """
