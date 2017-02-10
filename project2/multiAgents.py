@@ -14,8 +14,7 @@
 
 from util import manhattanDistance
 from game import Directions
-import random, util
-
+import random, util, math
 from game import Agent
 
 class ReflexAgent(Agent):
@@ -77,7 +76,7 @@ class ReflexAgent(Agent):
                       return currentPos, pathsDic[currentPos]
 
                     else:
-                      wallList = self.gridToList(currentGameState.getWalls())
+                      wallList = currentGameState.getWalls().asList()
                       successors = self.getSuccessors(currentPos, wallList, currentGameState.getWalls())
                       for successor in successors:
                         successorPos = (successor[0], successor[1])
@@ -131,36 +130,23 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         newGhostPoses = [ghostState.getPosition() for ghostState in newGhostStates]
 
-        closestFoodPos, closestFoodPath = self.bfs(newPos, currentGameState.getCapsules(), currentGameState)
-        closestFoodDistance = manhattanDistance(newPos, closestFoodPos)
+        numberOfFood = successorGameState.getNumFood()
 
-        numberOfFood = len(currentGameState.getCapsules())
         if numberOfFood == 0:
-          return 42
+          return 1000
+
+        closestFoodDistance = min([manhattanDistance(newPos, foodPos) for foodPos in self.gridToList(successorGameState.getFood())])
 
         stopPoint = 0
         if action == Directions.STOP:
-          stopPoint = 1
+          stopPoint = 20
 
-        if sum(newScaredTimes) > 1:
-          print "cloestFoodDistance: ", closestFoodDistance
-          print "numberOfFood: ", numberOfFood
-          return (2/(closestFoodDistance+1)) + (5/numberOfFood) - stopPoint
-        elif sum(newScaredTimes) == 1:
-          return (1/(closestFoodDistance+1)) + (2/numberOfFood) - stopPoint
-        closestGhostPos, closestGhostPath = self.bfs(newPos, newGhostPoses, currentGameState)
-        closestGhostDistance = manhattanDistance(newPos, closestGhostPos)
+        closestGhostDistance = min([manhattanDistance(newPos, ghostPosition) for ghostPosition in successorGameState.getGhostPositions()])
 
-        if closestGhostPos == newPos:
-          return 0
+        if newPos in newGhostPoses:
+          return -1000
 
-        ghostPoint = 0
-        if closestFoodDistance == 1:
-          ghostPoint = 3
-
-        # return (1/closestFoodDistance) - (2/closestGhostDistance^2) + (1/numberOfFood) - stopPoint - ghostPoint
-
-        return (1/closestFoodDistance) - (2/closestGhostDistance^2) + (1/numberOfFood) - stopPoint - ghostPoint
+        return - closestFoodDistance + 3*math.sqrt(closestGhostDistance) + 1.3*successorGameState.getScore()
 
 def scoreEvaluationFunction(currentGameState):
     """
